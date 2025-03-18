@@ -245,9 +245,9 @@ jobs:
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing \
+            --parameter-overrides TagEnvironment=production \
               HostedZoneId=Z00743383VXA4QAJRZZWR \
               CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704 \
-              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:968225077300:function:lambda-authorizer-testing
+              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:968225077300:function:lambda-authorizer-production
 
 
