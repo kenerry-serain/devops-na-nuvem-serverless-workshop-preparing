@@ -13,6 +13,7 @@ on:
       - 'feature**'
 
 env:
+  ACCOUNT_ID: 968225077300
   SAM_TEMPLATE: ./product-microservice/template.yml
   TESTING_STACK_NAME: product-stack-development
   TESTING_PIPELINE_EXECUTION_ROLE: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-sam-cli-managed-developme-PipelineExecutionRole-jMQTiJAQoxEE
@@ -99,7 +100,7 @@ jobs:
       - name: Deploy to feature stack in the testing account
         shell: bash
         run: |
-          !Sub sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-') \
+          sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-') \
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
@@ -107,8 +108,8 @@ jobs:
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides TagEnvironment=$(echo ${GITHUB_REF_NAME} | tr '/' '-') \
               HostedZoneId=Z00743383VXA4QAJRZZWR \
-              CertificateArn=arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/05afa741-7893-4f67-901f-e70f43ba9704 \
-              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:${AWS::AccountId}:function:lambda-authorizer-testing
+              CertificateArn=arn:aws:acm:us-east-1:${ACCOUNT_ID}:certificate/05afa741-7893-4f67-901f-e70f43ba9704 \
+              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:${ACCOUNT_ID}:function:lambda-authorizer-testing
 
   build-and-package:
     if: github.ref == 'refs/heads/main'&& github.event_name != 'delete'
@@ -189,14 +190,16 @@ jobs:
 
       - name: Deploy to testing account
         run: |
-          !Sub sam deploy --stack-name ${TESTING_STACK_NAME} \
+          sam deploy --stack-name ${TESTING_STACK_NAME} \
             --template packaged-testing.yaml \
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/05afa741-7893-4f67-901f-e70f43ba9704
+            --parameter-overrides TagEnvironment=testing \
+              HostedZoneId=Z00743383VXA4QAJRZZWR \
+              CertificateArn=arn:aws:acm:us-east-1:${ACCOUNT_ID}:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
   # integration-test:
   #   if: github.ref == 'refs/heads/main'
@@ -234,12 +237,14 @@ jobs:
 
       - name: Deploy to production account
         run: |
-          !Sub sam deploy --stack-name ${PROD_STACK_NAME} \
+          sam deploy --stack-name ${PROD_STACK_NAME} \
             --template packaged-prod.yaml \
             --capabilities CAPABILITY_IAM \
             --region ${PROD_REGION} \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/05afa741-7893-4f67-901f-e70f43ba9704
+            --parameter-overrides TagEnvironment=testing \
+              HostedZoneId=Z00743383VXA4QAJRZZWR \
+              CertificateArn=arn:aws:acm:us-east-1:${ACCOUNT_ID}:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
