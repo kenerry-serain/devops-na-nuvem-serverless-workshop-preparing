@@ -80,7 +80,9 @@ jobs:
             --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
             --no-fail-on-empty-changeset \
             --role-arn ${{vars.DEVELOPMENT_CLOUDFORMATION_EXECUTION_ROLE}} \
-            --parameter-overrides TagEnvironment=$(echo ${GITHUB_REF_NAME} | tr '/' '-') HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
+            --parameter-overrides TagEnvironment=$(echo ${GITHUB_REF_NAME} | tr '/' '-') \
+              HostedZoneId=Z00743383VXA4QAJRZZWR \
+              CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
   build-and-deploy-development:
     if: github.ref == 'refs/heads/main'
@@ -119,7 +121,9 @@ jobs:
             --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
             --no-fail-on-empty-changeset \
             --role-arn ${{vars.DEVELOPMENT_CLOUDFORMATION_EXECUTION_ROLE}} \
-            --parameter-overrides TagEnvironment=development TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
+            --parameter-overrides TagEnvironment=development \
+                HostedZoneId=Z00743383VXA4QAJRZZWR \
+                CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
   build-and-deploy-production:
     if: github.ref == 'refs/heads/main'
@@ -135,8 +139,8 @@ jobs:
       - name: Assume the prod pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+          aws-region: ${{ vars.PROD_REGION }}
+          role-to-assume: ${{ vars.PROD_PIPELINE_EXECUTION_ROLE }}
           role-session-name: prod-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
@@ -161,4 +165,3 @@ jobs:
             --parameter-overrides TagEnvironment=production \
                 HostedZoneId=Z00743383VXA4QAJRZZWR \
                 CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
-
