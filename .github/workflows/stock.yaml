@@ -60,8 +60,8 @@ jobs:
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - run: sam build --template ${SAM_TEMPLATE} --use-container
 
+      - run: sam build --template ${SAM_TEMPLATE} --use-container --mount-with WRITE
       - name: Assume the development pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -148,7 +148,7 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      - run: sam build --template ${SAM_TEMPLATE} --use-container
+      - run: sam build --template ${SAM_TEMPLATE} --use-container --mount-with WRITE
       - name: Upload artifacts to prod artifact buckets
         run: |
           sam package \
