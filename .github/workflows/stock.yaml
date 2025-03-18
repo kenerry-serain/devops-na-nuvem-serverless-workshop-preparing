@@ -161,10 +161,10 @@ jobs:
           sam deploy --stack-name ${PROD_STACK_NAME} \
             --template packaged-prod.yaml \
             --capabilities CAPABILITY_IAM \
-            --region ${PROD_REGION} \
+            --region ${{vars.PROD_REGION}} \
             --s3-bucket ${{vars.PROD_ARTIFACTS_BUCKET}} \
             --no-fail-on-empty-changeset \
-            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
+            --role-arn ${{vars.PROD_CLOUDFORMATION_EXECUTION_ROLE}} \
             --parameter-overrides TagEnvironment=production \
                 HostedZoneId=Z00743383VXA4QAJRZZWR \
                 LambdaAuthorizerArn=${{vars.LAMBDA_AUTHORIZER_ARN}} \
