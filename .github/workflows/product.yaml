@@ -1,4 +1,4 @@
-name: Product
+name: Infrastructure
 
 on:
   workflow_dispatch:
@@ -14,52 +14,31 @@ on:
 
 env:
   SAM_TEMPLATE: ./product-microservice/template.yml
-  TESTING_STACK_NAME: product-stack-development
-  TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-developme-PipelineExecutionRole-jMQTiJAQoxEE
-  TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-devel-CloudFormationExecutionRo-2A1Kp5rTnr5L
-  TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-development-pi-artifactsbucket-ctr5ozhwzdan
-  # If there are functions with "Image" PackageType in your template,
-  # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
-  # testing "sam package" and "sam deploy" commands.
-  # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
-  TESTING_REGION: us-east-1
-  PROD_STACK_NAME: product-stack-quality
-  PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-quality-p-PipelineExecutionRole-mi9hx723VCYe
-  PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-quali-CloudFormationExecutionRo-5w4ZaBCfEJag
-  PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-quality-pipeli-artifactsbucket-mi3toozcu41i
-  # If there are functions with "Image" PackageType in your template,
-  # uncomment the line below and add "--image-repository ${PROD_IMAGE_REPOSITORY}" to
-  # prod "sam package" and "sam deploy" commands.
-  # PROD_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
-  PROD_REGION: us-east-1
+  DEVELOPMENT_STACK_NAME: product-microservice-stack-development
+  PROD_STACK_NAME: product-microservice-stack-quality
 
 permissions:
   id-token: write
   contents: read
+
 jobs:
-  # test:
-  #   if: github.event_name == 'push'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - run: |
-  #         # trigger the tests here
 
   delete-feature:
     if: startsWith(github.event.ref, 'feature') && github.event_name == 'delete'
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
 
-      - name: Assume the testing pipeline user role
+      - name: Assume the development pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: testing-packaging
+          aws-region: ${{ vars.DEVELOPMENT_REGION }}
+          role-to-assume: ${{ vars.DEVELOPMENT_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: development-packaging
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
@@ -69,17 +48,13 @@ jobs:
         run: |
           sam delete \
             --stack-name $(echo ${FEATURE_BRANCH_NAME} | tr '/' '-') \
-            --region ${TESTING_REGION} \
+            --region ${{vars.DEVELOPMENT_REGION}} \
             --no-prompts
 
   build-and-deploy-feature:
-    # this stage is triggered only for feature branches (feature*),
-    # which will build the stack and deploy to a stack named with branch name.
-    # https://github.com/actions/setup-python
-    # https://github.com/aws-actions/configure-aws-credentials#notice-node12-deprecation-warning
     if: startsWith(github.ref, 'refs/heads/feature')
-    # needs: [test]
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
@@ -87,154 +62,93 @@ jobs:
           use-installer: true
       - run: sam build --template ${SAM_TEMPLATE} --use-container
 
-      - name: Assume the testing pipeline user role
+      - name: Assume the development pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
+          aws-region: ${{ vars.DEVELOPMENT_REGION }}
+          role-to-assume: ${{ vars.DEVELOPMENT_PIPELINE_EXECUTION_ROLE }}
           role-session-name: feature-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      - name: Deploy to feature stack in the testing account
+      - name: Deploy to feature stack in the development account
         shell: bash
         run: |
           sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-') \
             --capabilities CAPABILITY_IAM \
-            --region ${TESTING_REGION} \
-            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+            --region ${{vars.DEVELOPMENT_REGION}} \
+            --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
+            --role-arn ${{vars.DEVELOPMENT_CLOUDFORMATION_EXECUTION_ROLE}} \
             --parameter-overrides TagEnvironment=$(echo ${GITHUB_REF_NAME} | tr '/' '-') \
-              HostedZoneId=Z00743383VXA4QAJRZZWR \
-              CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704 \
-              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:968225077300:function:lambda-authorizer-testing
+                LambdaAuthorizerArn=${{vars.LAMBDA_AUTHORIZER_ARN}}
 
-  build-and-package:
-    if: github.ref == 'refs/heads/main'&& github.event_name != 'delete'
-    # needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-
-      - name: Build resources
-        run: sam build --template ${SAM_TEMPLATE} --use-container
-
-      - name: Assume the testing pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: testing-packaging
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
-
-      - name: Upload artifacts to testing artifact buckets
-        run: |
-          sam package \
-            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-            --region ${TESTING_REGION} \
-            --output-template-file packaged-testing.yaml
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: packaged-testing.yaml
-          path: packaged-testing.yaml
-
-      - name: Assume the prod pipeline user role
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: prod-packaging
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
-
-      - name: Upload artifacts to production artifact buckets
-        run: |
-          sam package \
-            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --region ${PROD_REGION} \
-            --output-template-file packaged-prod.yaml
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: packaged-prod.yaml
-          path: packaged-prod.yaml
-
-  deploy-testing:
+  build-and-deploy-development:
     if: github.ref == 'refs/heads/main'
-    needs: [build-and-package]
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v3
+
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: packaged-testing.yaml
 
-      - name: Assume the testing pipeline user role
+      - name: Assume the development pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.TESTING_REGION }}
-          role-to-assume: ${{ env.TESTING_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: testing-deployment
+          aws-region: ${{ vars.DEVELOPMENT_REGION }}
+          role-to-assume: ${{ vars.DEVELOPMENT_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: development-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      - name: Deploy to testing account
+      - run: sam build --template ${SAM_TEMPLATE} --use-container
+      - name: Upload artifacts to development artifact buckets
         run: |
-          sam deploy --stack-name ${TESTING_STACK_NAME} \
-            --template packaged-testing.yaml \
+          sam package \
+            --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
+            --region ${{ vars.DEVELOPMENT_REGION }} \
+            --output-template-file packaged-development.yaml
+
+      - name: Deploy to development account
+        run: |
+          sam deploy --stack-name ${DEVELOPMENT_STACK_NAME} \
+            --template packaged-development.yaml \
             --capabilities CAPABILITY_IAM \
-            --region ${TESTING_REGION} \
-            --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
+            --region ${{ vars.DEVELOPMENT_REGION }} \
+            --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
             --no-fail-on-empty-changeset \
-            --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing \
-              HostedZoneId=Z00743383VXA4QAJRZZWR \
-              CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704 \
-              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:968225077300:function:lambda-authorizer-testing
+            --role-arn ${{vars.DEVELOPMENT_CLOUDFORMATION_EXECUTION_ROLE}} \
+            --parameter-overrides TagEnvironment=development TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
-
-  # integration-test:
-  #   if: github.ref == 'refs/heads/main'
-  #   needs: [deploy-testing]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - run: |
-  #         # trigger the integration tests here
-
-  deploy-prod:
+  build-and-deploy-production:
     if: github.ref == 'refs/heads/main'
-    needs: [deploy-testing]
+    needs: [build-and-deploy-development]
     runs-on: ubuntu-latest
-    # Configure GitHub Action Environment to have a manual approval step before deployment to production
-    # https://docs.github.com/en/actions/reference/environments
     environment: production
     steps:
       - uses: actions/checkout@v3
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-      - uses: actions/download-artifact@v4
-        with:
-          name: packaged-prod.yaml
 
       - name: Assume the prod pipeline user role
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+          aws-region: ${{ vars.PROD_REGION }}
+          role-to-assume: ${{ vars.PROD_PIPELINE_EXECUTION_ROLE }}
           role-session-name: prod-deployment
           role-duration-seconds: 3600
           role-skip-session-tagging: true
+
+      - run: sam build --template ${SAM_TEMPLATE} --use-container
+      - name: Upload artifacts to prod artifact buckets
+        run: |
+          sam package \
+            --s3-bucket ${{vars.PROD_ARTIFACTS_BUCKET}} \
+            --region ${{ vars.PROD_REGION }} \
+            --output-template-file packaged-prod.yaml
 
       - name: Deploy to production account
         run: |
@@ -246,8 +160,6 @@ jobs:
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides TagEnvironment=production \
-              HostedZoneId=Z00743383VXA4QAJRZZWR \
-              CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704 \
-              LambdaAuthorizerArn=arn:aws:lambda:us-east-1:968225077300:function:lambda-authorizer-production
-
+                HostedZoneId=Z00743383VXA4QAJRZZWR \
+                CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 

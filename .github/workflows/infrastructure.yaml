@@ -121,7 +121,7 @@ jobs:
             --role-arn ${{vars.DEVELOPMENT_CLOUDFORMATION_EXECUTION_ROLE}} \
             --parameter-overrides TagEnvironment=development TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
-  download-and-deploy-production:
+  build-and-deploy-production:
     if: github.ref == 'refs/heads/main'
     needs: [build-and-deploy-development]
     runs-on: ubuntu-latest
