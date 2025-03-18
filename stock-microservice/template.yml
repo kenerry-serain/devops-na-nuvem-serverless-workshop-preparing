@@ -77,9 +77,9 @@ Resources:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
       BasePath: stocks
-      DomainName: !Ref ApiGatewayDomain
+      DomainName: !Sub backend-${TagEnvironment}.devopsnanuvemweek.com
       RestApiId: !Ref ApiGatewayApi
-      Stage: production
+      Stage: !Ref ApiGatewayApi.Stage
 
   ApiFunction:
     Type: AWS::Serverless::Function
