@@ -19,7 +19,7 @@ Resources:
   DynamoTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: products
+      TableName: !Sub products-${TagEnvironment}
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       PrimaryKey:
@@ -50,6 +50,7 @@ Resources:
   ApiFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: products-${TagEnvironment}
       Runtime: nodejs22.x
       Handler: handler.main
       Timeout: 30
