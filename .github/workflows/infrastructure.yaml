@@ -68,7 +68,7 @@ jobs:
           FEATURE_BRANCH_NAME: ${{ github.event.ref }}
         run: |
           sam delete \
-            --stack-name $(echo ${FEATURE_BRANCH_NAME##*/} | tr -cd '[a-zA-Z0-9-]') \
+            --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-') \
             --region ${TESTING_REGION} \
             --no-prompts
 
@@ -108,7 +108,7 @@ jobs:
             --parameter-overrides TagEnvironment=$(echo ${GITHUB_REF_NAME} | tr '/' '-') HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
   build-and-package:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'&& github.event_name != 'delete'
     # needs: [test]
     runs-on: ubuntu-latest
     steps:
