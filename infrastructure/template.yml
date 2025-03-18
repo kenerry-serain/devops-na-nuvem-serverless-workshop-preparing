@@ -66,7 +66,7 @@ Resources:
     Type: AWS::ApiGateway::DomainName
     Properties:
       CertificateArn: !Ref CertificateArn
-      DomainName: !Sub backend.${TagEnvironment}.devopsnanuvemweek.com
+      DomainName: !Sub backend-${TagEnvironment}.devopsnanuvemweek.com
       SecurityPolicy: TLS_1_2
       EndpointConfiguration:
         Types:
@@ -76,7 +76,7 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       HostedZoneId: !Ref HostedZoneId
-      Name: !Sub backend.${TagEnvironment}.devopsnanuvemweek.com
+      Name: !Sub backend-${TagEnvironment}.devopsnanuvemweek.com
       Type: A
       AliasTarget:
         DNSName: !GetAtt ApiGatewayDomain.DistributionDomainName

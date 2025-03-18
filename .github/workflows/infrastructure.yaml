@@ -105,7 +105,7 @@ jobs:
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/efd0904b-7540-4cd3-b053-307b01122628
+            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
   build-and-package:
     if: github.ref == 'refs/heads/main'
@@ -193,7 +193,7 @@ jobs:
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/efd0904b-7540-4cd3-b053-307b01122628
+            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
   # integration-test:
   #   if: github.ref == 'refs/heads/main'
@@ -238,5 +238,5 @@ jobs:
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/efd0904b-7540-4cd3-b053-307b01122628
+            --parameter-overrides TagEnvironment=testing TagProject=development HostedZoneId=Z00743383VXA4QAJRZZWR CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
 
