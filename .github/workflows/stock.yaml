@@ -106,7 +106,7 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      - run: sam build --template ${SAM_TEMPLATE} --use-container
+      - run: sam build --template ${SAM_TEMPLATE} --use-container --mount-with WRITE
       - name: Upload artifacts to development artifact buckets
         run: |
           sam package \
