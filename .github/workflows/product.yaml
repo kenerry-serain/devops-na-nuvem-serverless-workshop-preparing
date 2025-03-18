@@ -1,4 +1,4 @@
-name: Infrastructure
+name: Product
 
 on:
   workflow_dispatch:
@@ -7,14 +7,14 @@ on:
       - 'main'
       - 'feature**'
     paths:
-      - 'infrastructure/**' 
+      - 'product-microservice/**' 
   delete:
     branches:
       - 'feature**'
 
 env:
-  SAM_TEMPLATE: ./infrastructure/template.yml
-  TESTING_STACK_NAME: infrastructure-stack-development
+  SAM_TEMPLATE: ./product-microservice/template.yml
+  TESTING_STACK_NAME: product-stack-development
   TESTING_PIPELINE_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-developme-PipelineExecutionRole-jMQTiJAQoxEE
   TESTING_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-devel-CloudFormationExecutionRo-2A1Kp5rTnr5L
   TESTING_ARTIFACTS_BUCKET: aws-sam-cli-managed-development-pi-artifactsbucket-ctr5ozhwzdan
@@ -23,7 +23,7 @@ env:
   # testing "sam package" and "sam deploy" commands.
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: us-east-1
-  PROD_STACK_NAME: infrastructure-stack-quality
+  PROD_STACK_NAME: product-stack-quality
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-quality-p-PipelineExecutionRole-mi9hx723VCYe
   PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::968225077300:role/aws-sam-cli-managed-quali-CloudFormationExecutionRo-5w4ZaBCfEJag
   PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-quality-pipeli-artifactsbucket-mi3toozcu41i
