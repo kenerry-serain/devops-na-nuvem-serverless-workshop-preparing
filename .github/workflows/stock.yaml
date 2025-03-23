@@ -47,7 +47,7 @@ jobs:
           FEATURE_BRANCH_NAME: ${{ github.event.ref }}
         run: |
           sam delete \
-            --stack-name $(echo ${FEATURE_BRANCH_NAME} | tr '/' '-') \
+            --stack-name $(echo ${FEATURE_BRANCH_NAME} | tr '/' '-')-stocks \
             --region ${{vars.DEVELOPMENT_REGION}} \
             --no-prompts
 
@@ -74,7 +74,7 @@ jobs:
       - name: Deploy to feature stack in the development account
         shell: bash
         run: |
-          sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-') \
+          sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-')-stocks \
             --capabilities CAPABILITY_IAM \
             --region ${{vars.DEVELOPMENT_REGION}} \
             --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
@@ -84,7 +84,6 @@ jobs:
                 HostedZoneId=Z00743383VXA4QAJRZZWR \
                 LambdaAuthorizerArn=${{vars.LAMBDA_AUTHORIZER_ARN}} \
                 CertificateArn=arn:aws:acm:us-east-1:968225077300:certificate/05afa741-7893-4f67-901f-e70f43ba9704
-
 
   build-and-deploy-development:
     if: github.ref == 'refs/heads/main'
