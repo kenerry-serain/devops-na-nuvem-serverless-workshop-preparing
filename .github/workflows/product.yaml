@@ -74,7 +74,7 @@ jobs:
       - name: Deploy to feature stack in the development account
         shell: bash
         run: |
-          sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-') \
+          sam deploy --stack-name $(echo ${GITHUB_REF_NAME} | tr '/' '-')-product \
             --capabilities CAPABILITY_IAM \
             --region ${{vars.DEVELOPMENT_REGION}} \
             --s3-bucket ${{vars.DEVELOPMENT_ARTIFACTS_BUCKET}} \
