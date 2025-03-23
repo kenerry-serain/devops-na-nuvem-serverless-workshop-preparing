@@ -25,7 +25,7 @@ Resources:
   DynamoTable:
     Type: AWS::Serverless::SimpleTable
     Properties:
-      TableName: stocks
+      TableName: !Sub stocks-${TagEnvironment}
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       PrimaryKey:
@@ -37,9 +37,11 @@ Resources:
         Project: !Ref TagProject
         Environment: !Ref TagEnvironment
 
+  #Name?
   ApiGatewayApi:
     Type: AWS::Serverless::Api
     Properties:
+      Name: !Sub stocks-api-${TagEnvironment}
       StageName: production
       Auth:
         DefaultAuthorizer: LambdaAuthorizer
@@ -84,6 +86,7 @@ Resources:
   ApiFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub stocks-${TagEnvironment}
       Runtime: dotnet8
       Handler: StockApi
       Timeout: 30
